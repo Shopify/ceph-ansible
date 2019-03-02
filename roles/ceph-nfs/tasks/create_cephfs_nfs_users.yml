@@ -1,0 +1,14 @@
+---
+- name: create "{{ item.name }}"
+  command: "ceph auth get-or-create client.{{ item.name }} mon 'allow rw' mds 'allow r, allow rw path={{ item.path }}' osd 'allow rw pool={{ cephfs_data }}'"
+  delegate_to: "{{ groups[mon_group_name][0] }}"
+  when: ceph_nfs_create_cephfs_user
+  register: cephfs_user
+
+- name: set_fact ceph_nfs_cephfs_user_key
+  set_fact:
+    ceph_nfs_cephfs_user_key: "{{ cephfs_user.stdout.split('key = ')[1] }}"
+
+- name: set_fact ceph_nfs_cephfs_users_data
+  set_fact:
+          ceph_nfs_cephfs_users_data: "{{ ceph_nfs_cephfs_users_data + [{'name': item.name, 'path': item.path, 'mount_path': item.mount_path, 'share_id': item.share_id, 'squash': item.squash, 'key': ceph_nfs_cephfs_user_key}] }}"

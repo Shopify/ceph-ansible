@@ -10,6 +10,9 @@ NFS_Core_Param
 {% if ceph_nfs_bind_addr is defined %}
        Bind_Addr={{ ceph_nfs_bind_addr }};
 {% endif %}
+       Enable_NLM = false;
+       Enable_RQUOTA = false;
+       Protocols = 4;
 }
 
 {% if ceph_nfs_disable_caching or nfs_file_gw %}
@@ -18,11 +21,7 @@ EXPORT_DEFAULTS {
 }
 
 CACHEINODE {
-	Dir_Max = 1;
 	Dir_Chunk = 0;
-
-	Cache_FDs = false;
-
 	NParts = 1;
 	Cache_Size = 1;
 }
@@ -46,13 +45,14 @@ RADOS_KV {
 {% endif %}
 
 {% if nfs_file_gw %}
+{% for user_data in ceph_nfs_cephfs_users_data %}
 EXPORT
 {
-	Export_id={{ ceph_nfs_ceph_export_id }};
+	Export_id={{ user_data.share_id }};
 
-	Path = "/";
+	Path = {{ user_data.path }};
 
-	Pseudo = {{ ceph_nfs_ceph_pseudo_path }};
+	Pseudo = {{ user_data.mount_path }};
 
 	Access_Type = {{ ceph_nfs_ceph_access_type }};
 
@@ -60,19 +60,21 @@ EXPORT
 
 	Transports = TCP;
 
-	SecType = sys,krb5,krb5i,krb5p;
+	SecType = sys;
 
-	Squash = {{ ceph_nfs_ceph_squash }};
+	Squash = {{ user_data.squash }};
 
 	Attr_Expiration_Time = 0;
 
 	FSAL {
 		Name = CEPH;
-		User_Id = "{{ ceph_nfs_ceph_user }}";
+		User_Id = "{{ user_data.name }}";
+                Secret_Access_Key = "{{ user_data.key }}";
 	}
 
         {{ ganesha_ceph_export_overrides | default(None) }}
 }
+{% endfor %}
 {% endif %}
 {% if nfs_obj_gw %}
 EXPORT

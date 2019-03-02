@@ -21,6 +21,11 @@
 - name: include create_rgw_nfs_user.yml
   import_tasks: create_rgw_nfs_user.yml
 
+# User creation
+- name: include create_cephfs_nfs_users.yml
+  include_tasks: create_cephfs_nfs_users.yml
+  with_items: "{{ ceph_nfs_cephfs_users }}"
+
 # NOTE (leseb): workaround for issues with ganesha and librgw
 - name: include ganesha_selinux_fix.yml
   import_tasks: ganesha_selinux_fix.yml
