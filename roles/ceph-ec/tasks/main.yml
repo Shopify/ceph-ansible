@@ -1,0 +1,10 @@
+---
+# tasks file for ecpool
+
+- name: include create ec profile
+  include_tasks: create_ec_profile.yml
+  with_items: "{{ erasure_coded_profiles }}"
+
+- name: include create_ec_pool
+  include_tasks: create_ec_pool.yml
+  with_items: "{{ erasure_coded_pools }}"

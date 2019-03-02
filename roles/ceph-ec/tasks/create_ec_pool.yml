@@ -1,0 +1,45 @@
+---
+- name: Check if ec_pool exists
+  command: "ceph osd pool ls"
+  register: pools_result
+  run_once: true
+  changed_when: false
+
+- name: set_fact ec_pool_list
+  set_fact:
+    ec_pool_list: "{{ pools_result.stdout.split('\n') }}"
+
+- name: set_fact ec_pool_exists
+  set_fact:
+    ec_pool_exists: false
+
+- name: set_fact ec_pool_exists
+  set_fact:
+    ec_pool_exists: true
+  when: 'item.name in ec_pool_list '
+
+- name: create ec_pool {{ item.name }}
+  command: "ceph osd pool create {{ item.name }} {{ item.pgs_size }} {{ item.pgs_size }} erasure {{ item.profile }}"
+  run_once: true
+  register: result
+  changed_when: '"created" in result.stderr'
+
+- name: set_fact allow_ec_overwrites
+  set_fact:
+    allow_ec_overwrites: false
+  when:
+    - 'item.allow_ec_overwrites is defined'
+
+- name: set allow_ec_overwrites
+  set_fact:
+    allow_ec_overwrites: true
+  when:
+    - 'item.allow_ec_overwrites is defined'
+    - 'item.allow_ec_overwrites == true'
+
+- name: set allow_ec_overwrites to pool
+  command: "ceph osd pool set {{ item.name }} allow_ec_overwrites true"
+  when:
+    - 'item.allow_ec_overwrites is defined'
+    - 'allow_ec_overwrites == true'
+  change_when: false

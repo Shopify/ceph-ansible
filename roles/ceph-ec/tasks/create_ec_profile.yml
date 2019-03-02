@@ -1,0 +1,25 @@
+---
+- name: check if erasure coded profile exists
+  command: "ceph osd erasure-code-profile ls"
+  register: ec_profile_result
+  delegate_to: "{{ groups[mon_group_name][0] }}"
+  changed_when: false
+
+- name: set_fact ec_profiles
+  set_fact:
+    ec_profiles: "{{ ec_profile_result.stdout.split('\n') }}"
+
+- name: set_fact ec_profile_exists
+  set_fact:
+    ec_profile_exists: false
+
+- name: set ec_profile_exists
+  set_fact:
+    ec_profile_exists: true
+  when:  'item.name in ec_profiles'
+
+- name: create ec profile {{ item.name }} if needed
+  command: "ceph osd erasure-code-profile set {{ item.name }} plugin={{ item.plugin }}  technique={{ item.technique }} k={{ item.k }} m={{ item.m }} crush-failure-domain={{ item.crush_failure_domain }}"
+  when: ec_profile_exists == false
+  delegate_to: "{{ groups[mon_group_name][0] }}"
+  changed_when: false
