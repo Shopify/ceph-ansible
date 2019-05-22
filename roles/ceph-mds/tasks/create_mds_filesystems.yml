@@ -4,6 +4,7 @@
     - name: create filesystem pools
       command: "{{ hostvars[groups[mon_group_name][0]]['docker_exec_cmd'] | default('') }} ceph --cluster {{ cluster }} osd pool create {{ item.name }} {{ item.pgs | default(osd_pool_default_pg_num) }}"
       changed_when: false
+      failed_when: false
       delegate_to: "{{ groups[mon_group_name][0] }}"
       with_items:
         - "{{ cephfs_pools }}"
@@ -13,6 +14,7 @@
       with_items: "{{ cephfs_pools | unique }}"
       delegate_to: "{{ groups[mon_group_name][0] }}"
       changed_when: false
+      failed_when: false
       when:
         - item.size | default(osd_pool_default_size) != ceph_osd_pool_default_size
 
