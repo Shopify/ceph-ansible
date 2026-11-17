@@ -1,3 +1,5 @@
+> **This repository is no longer maintained.** It has been archived by Shopify and receives no updates or security fixes.
+
 ceph-ansible
 ============
 Ansible playbooks for Ceph, the distributed filesystem.
